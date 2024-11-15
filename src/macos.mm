@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <string>
 #include <chrono>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 using namespace std::chrono;
@@ -19,9 +21,10 @@ struct AppUsage {
 };
 
 unordered_map<string, AppUsage> appUsageMap;
-string currentApp;
+string currentApp = "Terminal";  // Placeholder for current app
 auto lastSwitchTime = steady_clock::now();
-NSTimer *usageTimer;
+bool running = true;
+mutex appUsageMutex;
 
 // Function to send a notification when the usage limit is reached
 void sendNotification(const string& appName) {
@@ -44,88 +47,103 @@ void terminateApp(const string& appName) {
 
 // Show a dialog box and terminate the app
 void showDialogAndTerminate(const string& appName) {
-    cout << "Attempting to show dialog on main thread for: " << appName << endl;
     dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
-            cout << "Inside dispatch_async main queue block for: " << appName << endl;
             NSAlert *alert = [[NSAlert alloc] init];
             alert.messageText = @"App Usage Limit Reached";
             alert.informativeText = [NSString stringWithFormat:@"%s has reached its usage limit. The app will now terminate.", appName.c_str()];
             [alert addButtonWithTitle:@"OK"];
 
             NSModalResponse response = [alert runModal];
-            cout << "Dialog response received: " << response << endl;
-
             if (response == NSAlertFirstButtonReturn) {
-                cout << "User acknowledged dialog. Terminating app: " << appName << endl;
                 terminateApp(appName);
-            } else {
-                cout << "User dismissed dialog without acknowledgment." << endl;
             }
         }
     });
 }
 
-// Update application usage time and check if limit is reached
-void updateAppUsage(const string& appName, int duration) {
-    // cout << "Updating usage for: " << appName << " with duration: " << duration << " seconds" << endl;
-    appUsageMap[appName].appName = appName;
-    appUsageMap[appName].totalSeconds += duration;
-
-    if (appUsageMap[appName].usageLimit != -1 &&
-        appUsageMap[appName].totalSeconds >= appUsageMap[appName].usageLimit &&
-        !appUsageMap[appName].limitReached) {
-        
-        cout << "Usage limit reached for " << appName << "! Sending notification and showing dialog." << endl;
-        sendNotification(appName);
-        showDialogAndTerminate(appName);
-
-        appUsageMap[appName].limitReached = true;
-    }
-}
-
-// Periodically check the usage
-void checkUsage() {
+// Update application usage and check for limits
+void checkAppUsage() {
     auto now = steady_clock::now();
     int duration = duration_cast<seconds>(now - lastSwitchTime).count();
 
+    lock_guard<mutex> lock(appUsageMutex); // Protect shared data
+
     if (!currentApp.empty() && duration > 0) {
-        updateAppUsage(currentApp, duration);
-        lastSwitchTime = now; // Only update after usage is added
-    }
-}
-
-
-void displayUsageStatistics() {
-    cout << "\nApplication Usage Statistics:" << endl;
-    cout << "------------------------------------" << endl;
-    for (const auto& entry : appUsageMap) {
-        cout << entry.second.appName << ": " << entry.second.totalSeconds << " seconds";
-        if (entry.second.usageLimit != -1) {
-            cout << " (Limit: " << entry.second.usageLimit << " seconds)";
+        // Ensure the app entry exists in the map and update appName
+        if (appUsageMap.find(currentApp) == appUsageMap.end()) {
+            appUsageMap[currentApp] = AppUsage(currentApp);
         }
-        cout << endl;
+        appUsageMap[currentApp].appName = currentApp;
+        appUsageMap[currentApp].totalSeconds += duration;
+
+        // Update the last switch time
+        lastSwitchTime = now;
+
+        // Check if usage limit is exceeded
+        if (appUsageMap[currentApp].usageLimit != -1 &&
+            appUsageMap[currentApp].totalSeconds >= appUsageMap[currentApp].usageLimit &&
+            !appUsageMap[currentApp].limitReached) {
+
+            appUsageMap[currentApp].limitReached = true;
+            sendNotification(currentApp);
+            showDialogAndTerminate(currentApp);
+        }
     }
-    cout << "------------------------------------" << endl;
 }
 
+// Live statistics display
+// Live statistics display
+void liveStatistics() {
+    while (running) {
+        checkAppUsage(); // Perform limit check and update usage time
+
+        // Clear the terminal screen
+        system("clear");
+
+        // Display updated statistics
+        lock_guard<mutex> lock(appUsageMutex); // Protect shared data
+        cout << "\nLive Application Usage Statistics:" << endl;
+        cout << "------------------------------------" << endl;
+        for (const auto& entry : appUsageMap) {
+            const string& appName = entry.second.appName.empty() ? entry.first : entry.second.appName;
+            cout << appName << ": " << entry.second.totalSeconds << " seconds";
+            if (entry.second.usageLimit != -1) {
+                cout << " (Limit: " << entry.second.usageLimit << " seconds)";
+            }
+            cout << endl;
+        }
+        cout << "------------------------------------" << endl;
+
+        this_thread::sleep_for(chrono::seconds(1));
+    }
+}
+
+// Handle active app change notifications
 void activeAppDidChange(NSNotification *notification) {
     auto now = steady_clock::now();
     int duration = duration_cast<seconds>(now - lastSwitchTime).count();
 
-    if (!currentApp.empty()) {
-        updateAppUsage(currentApp, duration);
+    lock_guard<mutex> lock(appUsageMutex); // Protect shared data
+
+    // Update usage time for the previously active app
+    if (!currentApp.empty() && currentApp != "Terminal") {
+        appUsageMap[currentApp].totalSeconds += duration;
     }
 
+    // Get the name of the newly active app
     NSRunningApplication *app = notification.userInfo[NSWorkspaceApplicationKey];
     currentApp = [app.localizedName UTF8String];
 
-    cout << "Active application changed to: " << currentApp << endl;
+    // Ensure the app name is stored in the map
+    if (!appUsageMap[currentApp].appName.empty() && appUsageMap[currentApp].appName != currentApp) {
+        appUsageMap[currentApp] = AppUsage(currentApp);
+    }
 
     lastSwitchTime = now;
-    displayUsageStatistics();
 }
 
+// Main function
 int main() {
     @autoreleasepool {
         cout << "Program started" << endl;
@@ -145,6 +163,12 @@ int main() {
             appUsageMap[appName].usageLimit = limit;
         }
 
+        // Initialize lastSwitchTime
+        lastSwitchTime = steady_clock::now();
+
+        // Start live statistics thread
+        thread statsThread(liveStatistics);
+
         [[[NSWorkspace sharedWorkspace] notificationCenter]
             addObserverForName:NSWorkspaceDidActivateApplicationNotification
                         object:nil
@@ -153,14 +177,12 @@ int main() {
             activeAppDidChange(notification);
         }];
 
-        // Start the usage timer
-        usageTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
-                                                    repeats:YES
-                                                        block:^(NSTimer *timer) {
-            checkUsage(); // Periodically check and update usage
-        }];
-
+        // Main run loop
         [[NSRunLoop mainRunLoop] run];
+
+        // Stop live statistics when exiting
+        running = false;
+        statsThread.join();
     }
     return 0;
 }
