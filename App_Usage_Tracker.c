@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <tlhelp32.h>
+#include "resource.h"
 
 #define MAX_APPS 50
 #define UPDATE_INTERVAL 1000  // Update every second
@@ -45,7 +46,7 @@ void GetAppFriendlyName(const char *processName, char *friendlyName, int size) {
         strncpy(friendlyName, "Mozilla Firefox", size);
     } else if (strcmp(processName, "outlook.exe") == 0) {
         strncpy(friendlyName, "Microsoft Outlook", size);
-    } else if (strcmp(processName, "spotify.exe") == 0) {
+    } else if (strcmp(processName, "Spotify.exe") == 0) {
         strncpy(friendlyName, "Spotify", size);
     } else if (strcmp(processName, "teams.exe") == 0) {
         strncpy(friendlyName, "Microsoft Teams", size);
@@ -187,10 +188,10 @@ void HandleAppWarnings(AppUsage *appUsage) {
     if (appUsage->timeSpent >= appUsage->timeLimit && !appUsage->popupShown) {
         appUsage->popupShown = TRUE;
 
-        // Create and display the warning message box
-        HWND hwndWarning = CreateWindow("STATIC", "Time limit exceeded!", 
-                                        WS_VISIBLE | WS_CHILD | SS_CENTER, 
-                                        100, 100, 300, 100, hwndMain, NULL, hInstance, NULL);
+        // // Create and display the warning message box
+        // HWND hwndWarning = CreateWindow("STATIC", "Time limit exceeded!", 
+        //                                 WS_VISIBLE | WS_CHILD | SS_CENTER, 
+        //                                 100, 100, 300, 100, hwndMain, NULL, hInstance, NULL);
 
         // Bring the warning box to the foreground
         SetForegroundWindow(hwndMain);
@@ -216,7 +217,7 @@ void HandleAppWarnings(AppUsage *appUsage) {
         SetTimer(hwndMain, 1, UPDATE_INTERVAL, NULL);
         appUsage->popupShown = FALSE;  // Reset popup flag
 
-        DestroyWindow(hwndWarning); // Remove warning window
+        //DestroyWindow(hwndWarning); // Remove warning window
     }
 }
 
@@ -242,10 +243,38 @@ void UpdateSelectionAndAdjustTimeLimit(HWND hwnd, WPARAM wParam) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
-            hwndList = CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_NOTIFY, 
-                                    10, 10, 400, 200, hwnd, NULL, hInstance, NULL);
-            hwndTop5List = CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD, 
-                                        10, 220, 400, 100, hwnd, NULL, hInstance, NULL);
+    // Create the heading for the main list
+    CreateWindow(
+        "STATIC", "App Usage Details", 
+        WS_VISIBLE | WS_CHILD | SS_CENTER,
+        10, 0, 400, 20, // Place at the top
+        hwnd, NULL, hInstance, NULL
+    );
+
+    // Create the main ListBox
+    hwndList = CreateWindow(
+        "LISTBOX", NULL,
+        WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
+        10, 20, 400, 180, // Position below the heading with adjusted height
+        hwnd, NULL, hInstance, NULL
+    );
+
+    // Create the heading for the top 5 list
+    CreateWindow(
+        "STATIC", "Most Used Apps", 
+        WS_VISIBLE | WS_CHILD | SS_CENTER,
+        10, 210, 400, 20, // Place below the main listbox
+        hwnd, NULL, hInstance, NULL
+    );
+
+    // Create the Top 5 ListBox
+    hwndTop5List = CreateWindow(
+        "LISTBOX", NULL,
+        WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
+        10, 230, 400, 100, // Position below the "Most Used Apps" heading
+        hwnd, NULL, hInstance, NULL
+    );
+
             hwndIncButton = CreateWindow("BUTTON", "+", WS_VISIBLE | WS_CHILD, 
                                          420, 10, 30, 30, hwnd, (HMENU)1, hInstance, NULL);
             hwndDecButton = CreateWindow("BUTTON", "-", WS_VISIBLE | WS_CHILD, 
@@ -290,6 +319,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // Load custom icon
 
     RegisterClass(&wc);
 
@@ -310,3 +340,4 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
     }
     return 0;
 }
+
