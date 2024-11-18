@@ -77,6 +77,9 @@ void GetAppFriendlyName(const char *processName, char *friendlyName, int size) {
     } 
     else if (strcmp(processName, "Code.exe") == 0) {
         strncpy(friendlyName, "VS Code", size);
+    }
+    else if (strcmp(processName, "olk.exe") == 0) {
+        strncpy(friendlyName, "Microsoft Outlook", size);
     } else {
         strncpy(friendlyName, processName, size);  // Default to process name if no match
     }
@@ -103,7 +106,7 @@ int GetActiveProcessName(char *processName, int size, DWORD *pid) {
 
 // Retrieve or initialize AppUsage for a specific process
 AppUsage* GetOrAddAppUsage(const char *processName, DWORD pid) {
-    if (strcmp(processName, "AppUsageTracker.exe") == 0) {
+    if (strcmp(processName, "AppUsageTracker.exe") == 0 || strcmp(processName, "ShellExperienceHost.exe") == 0 || strcmp(processName, "WindowsTerminal.exe") == 0 || strcmp(processName, "SearchHost.exe") == 0) {
         return NULL;  // Skip tracking this process
     }
     for (int i = 0; i < appCount; i++) {
