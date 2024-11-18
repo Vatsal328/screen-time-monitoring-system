@@ -103,7 +103,7 @@ int GetActiveProcessName(char *processName, int size, DWORD *pid) {
 
 // Retrieve or initialize AppUsage for a specific process
 AppUsage* GetOrAddAppUsage(const char *processName, DWORD pid) {
-    if (strcmp(processName, "it3.exe") == 0) {
+    if (strcmp(processName, "AppUsageTracker.exe") == 0) {
         return NULL;  // Skip tracking this process
     }
     for (int i = 0; i < appCount; i++) {
