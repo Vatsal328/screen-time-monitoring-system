@@ -1,63 +1,113 @@
 # Screen Time Monitoring System
 
-## Description
-The **Screen Time Monitoring System** tracks the time spent on user-initiated applications, excluding system background processes. It allows users to set time limits for applications, track their usage, and receive notifications when a time limit is exceeded. The program identifies common programs and assigns user-friendly names.
+## Description  
+The **Screen Time Monitoring System** is a cross-platform application designed to track and manage the time users spend on their devices. It supports **Windows** and **macOS**, providing tailored functionalities for each operating system. Users can monitor active application usage, set time limits, and receive alerts when limits are exceeded. 
 
-## Features
-- **Track user-opened applications**: It only tracks the time spent on applications actively opened by the user.
-- **Time limit functionality**: Users can set and update time limits for each application.
-- **Top 5 most used applications**: Displays the top 5 most used applications based on time spent.
-- **Friendly app names**: Converts process names like `notepad.exe` to user-friendly names such as "Notepad."
-- **Notification on time limit exceed**: Alerts users when their time limit for an application is exceeded.
-- **Increment/Decrement time limit**: Users can modify the time limits dynamically.
+---
 
-## Installation
+## Features  
 
-### Requirements
-- A C compiler (e.g., GCC).
-- Windows OS for best compatibility (though it can be adapted to other platforms with necessary modifications).
-- The `psapi` library for interacting with system processes.
+### Common Features  
+- **Active Application Tracking**: Monitors the time spent on actively opened user applications.  
+- **Time Limit Functionality**: Users can set and adjust time limits for each application.  
+- **Notifications on Time Exceed**: Alerts users when an application's usage exceeds the set limit.  
 
-### Steps
-1. Clone the repository or download the project files.
-2. Open a terminal/command prompt and navigate to the project directory.
-3. To compile the code, run:
+### Windows-Specific Features  
+- **Top 5 Most Used Applications**: Displays the five most used applications based on time spent.  
+- **Friendly Application Names**: Converts process names like `notepad.exe` to user-friendly names such as "Notepad."  
+- **Dynamic Time Limit Modification**: Allows users to increment or decrement time limits dynamically.  
 
+### macOS-Specific Features  
+- **Live Usage Statistics**: Displays real-time statistics of all monitored applications in the terminal.  
+- **Valid for All Applications**: Automatically tracks all user applications without needing pre-configuration.  
+- **User-Friendly Names**: Application names are displayed without additional configurations.  
+- **Dialog Box and Termination**: When a time limit is exceeded, a notification and dialog box are shown. Pressing "OK" terminates the application.  
+
+---
+
+## Installation  
+
+### Requirements  
+
+#### Windows  
+- **Operating System**: Windows 7 or later.  
+- **Compiler**: A C compiler (e.g., GCC).  
+- **Library**: `psapi` for interacting with system processes.  
+
+#### macOS  
+- **Operating System**: macOS Mojave or later.  
+- **Compiler**: A C++ compiler supporting Objective-C++ (e.g., `clang`).  
+
+---
+
+### Installation Steps  
+
+#### Windows  
+1. Clone the repository or download the project files.  
+2. Open a terminal/command prompt and navigate to the project directory.  
+3. Compile the code:  
     ```bash
     gcc -o screen-time-monitoring-system it2.c -lpsapi
-    ```
+    ```  
+4. Run the program:  
+    ```bash
+    ./screen-time-monitoring-system
+    ```  
+Alternatively, use the `run.bat` file to launch the application.  
 
-4. Once compiled, you can run the program in two ways:
-   - **Using the terminal/command prompt**:
+#### macOS  
+1. Clone the repository or download the project files.  
+2. Open a terminal and navigate to the project directory.  
+3. Compile the code with `clang`:  
+    ```bash
+    clang++ -o screen-time-monitoring-system screen_time_monitoring.cpp -framework AppKit -framework Foundation
+    ```  
+4. Run the program:  
+    ```bash
+    ./screen-time-monitoring-system
+    ```  
 
-     ```bash
-     ./screen-time-monitoring-system
-     ```
-   
-   - **Using the `.bat` file**: Simply double-click the `run.bat` file in your project directory. It will automatically open the `.exe` file and run the application.
+---
 
-## Usage
+## Usage  
 
-1. **Tracking active applications**: When you run the program, it will display a list of active user applications and track the time spent on each.
-2. **Set time limits**: You can set a time limit for each application. Once an application exceeds its limit, you will receive a notification.
-3. **Top 5 most used applications**: The program displays the top 5 applications based on the total time spent.
-4. **Dynamic time limit modification**: You can adjust the time limit for any application using the increment and decrement buttons.
+### Windows  
+1. Launch the program to begin tracking active applications.  
+2. Enter time limits for specific applications.  
+3. Monitor the top 5 most used applications in real time.  
+4. Modify time limits as needed to manage usage.  
 
-## Supported Applications
-The program currently recognizes the following commonly used applications (additional ones can be added to the source code):
-- Notepad
-- Google Chrome
-- File Explorer
-- Mozilla Firefox
-- Microsoft Outlook
-- Spotify
-- VLC Media Player
-- Microsoft Teams
-- Discord
-- Steam
+### macOS  
+1. Launch the program to start tracking all user applications.  
+2. Enter time limits for applications at the start of the program.  
+3. View live usage statistics updated every second in the terminal.  
+4. When a time limit is exceeded, a notification and dialog box appear. Press "OK" to terminate the application.  
 
-## Contributing
-Feel free to fork the repository and make improvements. Pull requests are welcome!
+---
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Supported Applications  
+
+### Windows  
+- Notepad  
+- Google Chrome  
+- File Explorer  
+- Mozilla Firefox  
+- Microsoft Outlook  
+- Spotify  
+- VLC Media Player  
+- Microsoft Teams  
+- Discord  
+- Steam  
+
+### macOS  
+All actively opened user applications are supported without the need for pre-configuration.  
+
+---
+
+## Contributing  
+We welcome contributions to improve and expand the project. Fork the repository, make your changes, and submit a pull request!  
+
+---
+
+## License  
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
