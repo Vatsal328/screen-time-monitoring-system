@@ -47,20 +47,20 @@ The **Screen Time Monitoring System** is a cross-platform application designed t
 2. Open a terminal/command prompt and navigate to the project directory.  
 3. Compile the code:  
     ```bash
-    gcc -o screen-time-monitoring-system it2.c -lpsapi
+    gcc -o screen-time-monitoring-system AppUsageTracker.c -lpsapi
     ```  
 4. Run the program:  
     ```bash
     ./screen-time-monitoring-system
     ```  
-Alternatively, use the `run.bat` file to launch the application.  
+Alternatively, use the `build.bat` file to create the application and then open the .exe file to use it.  
 
 #### macOS  
 1. Clone the repository or download the project files.  
 2. Open a terminal and navigate to the project directory.  
 3. Compile the code with `clang`:  
     ```bash
-    clang++ -o screen-time-monitoring-system screen_time_monitoring.cpp -framework AppKit -framework Foundation
+    clang++ -o screen-time-monitoring-system macos.mm -framework AppKit -framework Foundation
     ```  
 4. Run the program:  
     ```bash
