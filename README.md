@@ -53,7 +53,7 @@ The **Screen Time Monitoring System** is a cross-platform application designed t
     ```bash
     ./screen-time-monitoring-system
     ```  
-Alternatively, use the `run.bat` file to launch the application.  
+Alternatively, use the `build.bat` file to create the application and then open the .exe file to use it.  
 
 #### macOS  
 1. Clone the repository or download the project files.  
