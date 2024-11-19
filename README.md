@@ -47,7 +47,7 @@ The **Screen Time Monitoring System** is a cross-platform application designed t
 2. Open a terminal/command prompt and navigate to the project directory.  
 3. Compile the code:  
     ```bash
-    gcc -o screen-time-monitoring-system it2.c -lpsapi
+    gcc -o screen-time-monitoring-system AppUsageTracker.c -lpsapi
     ```  
 4. Run the program:  
     ```bash
