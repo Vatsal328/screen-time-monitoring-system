@@ -23,7 +23,7 @@ HWND hwndMain, hwndList, hwndTop5List, hwndIncButton, hwndDecButton;
 HINSTANCE hInstance;
 int selectedAppIndex = -1;
 
-// Check if the process is a user-opened application (exclude system processes).
+// Checking if the process is a user-opened application (exclude system processes).
 BOOL IsUserApplication(DWORD pid) {
     HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (process) {
@@ -34,7 +34,7 @@ BOOL IsUserApplication(DWORD pid) {
     return FALSE;
 }
 
-// Map process name to application-friendly name.
+// Mapping process name to application-friendly name.
 void GetAppFriendlyName(const char *processName, char *friendlyName, int size) {
     if (strcmp(processName, "notepad.exe") == 0) {
         strncpy(friendlyName, "Notepad", size);
@@ -85,7 +85,7 @@ void GetAppFriendlyName(const char *processName, char *friendlyName, int size) {
     }
 }
 
-// Retrieve the active process name and PID of the application in focus.
+// Retrieving the active process name and PID of the application in focus.
 int GetActiveProcessName(char *processName, int size, DWORD *pid) {
     HWND hwnd = GetForegroundWindow();
     if (hwnd) {
@@ -104,10 +104,10 @@ int GetActiveProcessName(char *processName, int size, DWORD *pid) {
     return 0;
 }
 
-// Retrieve or initialize AppUsage for a specific process
+// Retrieving  AppUsage for a specific process
 AppUsage* GetOrAddAppUsage(const char *processName, DWORD pid) {
     if (strcmp(processName, "AppUsageTracker.exe") == 0 || strcmp(processName, "ShellExperienceHost.exe") == 0 || strcmp(processName, "WindowsTerminal.exe") == 0 || strcmp(processName, "SearchHost.exe") == 0) {
-        return NULL;  // Skip tracking this process
+        return NULL;  // Skipping tracking this process
     }
     for (int i = 0; i < appCount; i++) {
         if (strcmp(appUsages[i].processName, processName) == 0) {
@@ -126,7 +126,7 @@ AppUsage* GetOrAddAppUsage(const char *processName, DWORD pid) {
     return NULL;
 }
 
-// InputBox: Prompt the user to input a new time limit
+// InputBox: it prompts the user to input a new time limit
 BOOL InputBox(HWND hwndOwner, const char *title, const char *prompt, int *timeLimit) {
     char inputBuffer[32];
     sprintf(inputBuffer, "%d", *timeLimit);
@@ -178,7 +178,7 @@ void UpdateUsageList() {
     UpdateTop5List();
 }
 
-// Handles increment and decrement of time limits based on selection.
+// time limit for the specific app is incremented
 void AdjustTimeLimit(int adjustment) {
     if (selectedAppIndex >= 0 && selectedAppIndex < appCount) {
         appUsages[selectedAppIndex].timeLimit += adjustment;
@@ -186,33 +186,29 @@ void AdjustTimeLimit(int adjustment) {
     }
 }
 
-// Handle application warnings and timers
+// application warnings and timers are handled
 void HandleAppWarnings(AppUsage *appUsage) {
     if (appUsage->timeSpent >= appUsage->timeLimit && !appUsage->popupShown) {
-        appUsage->popupShown = TRUE;
+        appUsage->popupShown = TRUE;      // set it to true so that the warning is shown only one time
 
-        // // Create and display the warning message box
-        // HWND hwndWarning = CreateWindow("STATIC", "Time limit exceeded!", 
-        //                                 WS_VISIBLE | WS_CHILD | SS_CENTER, 
-        //                                 100, 100, 300, 100, hwndMain, NULL, hInstance, NULL);
-
-        // Bring the warning box to the foreground
+        // Bringing the warning box to the foreground
         SetForegroundWindow(hwndMain);
 
-        // Temporarily suspend the app tracking
         KillTimer(hwndMain, 1); // Stop the timer
 
+        //message box is displayed to the user when it exceeds the time limit
         int result = MessageBox(hwndMain, "Time limit exceeded. Do you want to close the app?", 
                                 "Warning", MB_YESNOCANCEL | MB_ICONEXCLAMATION);
 
         // Handle user choice
         if (result == IDYES) {
             HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, appUsage->pid);
+            //close the process
             if (hProcess) {
                 TerminateProcess(hProcess, 0);
                 CloseHandle(hProcess);
             }
-        } else if (result == IDCANCEL) {
+        } else if (result == IDCANCEL) {          //adjust the time limit
             InputBox(hwndMain, "Adjust Time Limit", "Increase the time limit:", &appUsage->timeLimit);
         }
 
@@ -220,21 +216,21 @@ void HandleAppWarnings(AppUsage *appUsage) {
         SetTimer(hwndMain, 1, UPDATE_INTERVAL, NULL);
         appUsage->popupShown = FALSE;  // Reset popup flag
 
-        //DestroyWindow(hwndWarning); // Remove warning window
     }
 }
 
 
 // Update the selected app index and handle time adjustment
 void UpdateSelectionAndAdjustTimeLimit(HWND hwnd, WPARAM wParam) {
+    //case when only selection is changed
     if (HIWORD(wParam) == LBN_SELCHANGE) {
         selectedAppIndex = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
-    } else if (LOWORD(wParam) == 1) {  // Increment button
+    } else if (LOWORD(wParam) == 1) {  // case for Increment button
         if (selectedAppIndex >= 0 && selectedAppIndex < appCount) {
             appUsages[selectedAppIndex].timeLimit += 10;  // Increase limit by 10 sec
             UpdateUsageList();
         }
-    } else if (LOWORD(wParam) == 2) {  // Decrement button
+    } else if (LOWORD(wParam) == 2) {  // case for Decrement button
         if (selectedAppIndex >= 0 && selectedAppIndex < appCount) {
             appUsages[selectedAppIndex].timeLimit -= 10;  // Decrease limit by 10 sec
             UpdateUsageList();
@@ -246,7 +242,7 @@ void UpdateSelectionAndAdjustTimeLimit(HWND hwnd, WPARAM wParam) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
-    // Create the heading for the main list
+    // Creating the heading for the main list
     CreateWindow(
         "STATIC", "App Usage Details", 
         WS_VISIBLE | WS_CHILD | SS_CENTER,
@@ -254,27 +250,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         hwnd, NULL, hInstance, NULL
     );
 
-    // Create the main ListBox
+    // Creating the main ListBox
     hwndList = CreateWindow(
         "LISTBOX", NULL,
         WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
-        10, 20, 400, 180, // Position below the heading with adjusted height
+        10, 20, 400, 180,
         hwnd, NULL, hInstance, NULL
     );
 
-    // Create the heading for the top 5 list
+    // Creating the heading for the top 5 list
     CreateWindow(
         "STATIC", "Most Used Apps", 
         WS_VISIBLE | WS_CHILD | SS_CENTER,
-        10, 210, 400, 20, // Place below the main listbox
+        10, 210, 400, 20,
         hwnd, NULL, hInstance, NULL
     );
 
-    // Create the Top 5 ListBox
+    // Creating the Top 5 ListBox
     hwndTop5List = CreateWindow(
         "LISTBOX", NULL,
         WS_VISIBLE | WS_CHILD | WS_BORDER | LBS_NOTIFY,
-        10, 230, 400, 100, // Position below the "Most Used Apps" heading
+        10, 230, 400, 100,
         hwnd, NULL, hInstance, NULL
     );
 
@@ -322,7 +318,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // Load custom icon
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON)); // for custom icon
 
     RegisterClass(&wc);
 
